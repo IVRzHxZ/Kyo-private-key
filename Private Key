@@ -450,3 +450,289 @@ VerifyBtn.MouseButton1Click:Connect(function()
 		isOverridingVerifyColor = false
 	end
 end)
+
+
+
+
+
+
+
+
+new version Key!!!!!!!!!!!!!!
+
+
+
+
+
+
+-- Configuration Settings
+local CORRECT_KEY = "K"
+local GET_KEY_LINK = "https://linkvertise.com"
+local DISCORD_LINK = "https://discord.gg"
+
+-- 🖼️ ILAGAY ANG MGA ASSET ID DITO (Mga numero lang mula sa Roblox Creator Dashboard o URL)
+local LOGO_ID = "131431625957379"            -- ID ng iyong logo icon sa itaas
+local BACKGROUND_ID = ""      -- ID para sa likod ng buong screen (gawing plain/dark)
+local MAINFRAME_BG_ID = ""   -- 🫧 ID NG BUBBLES MO DITO PARA PUMASOK SA MAINFRAME!
+
+-- Pag-format sa tamang Roblox Asset URL string
+local function parseAsset(id)
+    local num = string.match(tostring(id), "%d+")
+    return num and ("rbxassetid://" .. num) or ""
+end
+
+local LOGO_IMAGE_ID = parseAsset(LOGO_ID)
+local BACKGROUND_IMAGE_ID = parseAsset(BACKGROUND_ID)
+local MAINFRAME_IMAGE_ID = parseAsset(MAINFRAME_BG_ID)
+
+-- Services
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+-- 🛡️ ScreenGui Container Injection
+local sgui = Instance.new("ScreenGui")
+sgui.Name = "XenoKeySystemContainer"
+sgui.IgnoreGuiInset = true
+sgui.ResetOnSpawn = false
+
+pcall(function() sgui.Parent = CoreGui end)
+if not sgui.Parent then
+    sgui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- 🌌 1. Full Screen Canvas (Plain o Dark Grid Background)
+local bgFrame = Instance.new("ImageLabel")
+bgFrame.Size = UDim2.new(1, 0, 1, 0)
+bgFrame.Image = BACKGROUND_IMAGE_ID
+bgFrame.ScaleType = Enum.ScaleType.Crop
+bgFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 18)
+bgFrame.BorderSizePixel = 0
+bgFrame.Parent = sgui
+
+-- ⬜ 2. Main Container Box (Ang mismong madilim na kahon sa gitna)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 360, 0, 440)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 21, 28)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = sgui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 14)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(45, 49, 66)
+mainStroke.Thickness = 1.2
+mainStroke.Parent = mainFrame
+
+-- 🫧 3. Bubble Effect Layer (FIXED OVERLAY MECHANIC)
+local bubbleOverlay = Instance.new("ImageLabel")
+bubbleOverlay.Size = UDim2.new(1, 0, 1, 0)
+bubbleOverlay.BackgroundTransparency = 1 -- Siguradong silip ang background panel sa ilalim
+bubbleOverlay.Image = MAINFRAME_IMAGE_ID
+bubbleOverlay.ScaleType = Enum.ScaleType.Crop
+bubbleOverlay.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Pinapanatili ang orihinal na kulay ng bubble
+bubbleOverlay.BorderSizePixel = 0
+bubbleOverlay.ZIndex = 2 -- Naka-angat sa ibabaw ng base frame pero nasa ilalim ng text/buttons
+bubbleOverlay.Parent = mainFrame
+
+local bubbleCorner = Instance.new("UICorner")
+bubbleCorner.CornerRadius = UDim.new(0, 14)
+bubbleCorner.Parent = bubbleOverlay
+
+-- 🖼️ 4. Logo Badge Area
+local logoBox = Instance.new("Frame")
+logoBox.Size = UDim2.new(0, 54, 0, 54)
+logoBox.Position = UDim2.new(0.5, -27, 0, 24)
+logoBox.BackgroundColor3 = Color3.fromRGB(28, 30, 41)
+logoBox.BorderSizePixel = 0
+logoBox.ZIndex = 3
+logoBox.Parent = mainFrame
+
+local logoCorner = Instance.new("UICorner")
+logoCorner.CornerRadius = UDim.new(0, 10)
+logoCorner.Parent = logoBox
+
+local logoStroke = Instance.new("UIStroke")
+logoStroke.Color = Color3.fromRGB(60, 65, 85)
+logoStroke.Thickness = 1
+logoStroke.Parent = logoBox
+
+local logoImage = Instance.new("ImageLabel")
+logoImage.Size = UDim2.new(0.8, 0, 0.8, 0)
+logoImage.Position = UDim2.new(0.1, 0, 0.1, 0)
+logoImage.BackgroundTransparency = 1
+logoImage.Image = LOGO_IMAGE_ID
+logoImage.ZIndex = 4
+logoImage.Parent = logoBox
+
+-- 🔤 Title Headings
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 24)
+title.Position = UDim2.new(0, 0, 0, 96)
+title.BackgroundTransparency = 1
+title.Text = "Access Key Required"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.Font = Enum.Font.GothamBold
+title.ZIndex = 3
+title.Parent = mainFrame
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 20)
+subtitle.Position = UDim2.new(0, 0, 0, 122)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Enter your access key to continue"
+subtitle.TextColor3 = Color3.fromRGB(170, 175, 195)
+subtitle.TextSize = 12
+subtitle.Font = Enum.Font.Gotham
+subtitle.ZIndex = 3
+subtitle.Parent = mainFrame
+
+-- ✍️ Input Area (TextBox)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 312, 0, 48)
+textBox.Position = UDim2.new(0.5, -156, 0, 164)
+textBox.BackgroundColor3 = Color3.fromRGB(25, 27, 38)
+textBox.BorderSizePixel = 0
+textBox.Text = ""
+textBox.PlaceholderText = "Enter key here..."
+textBox.PlaceholderColor3 = Color3.fromRGB(90, 95, 115)
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.TextSize = 14
+textBox.Font = Enum.Font.Gotham
+textBox.ClearTextOnFocus = false
+textBox.ZIndex = 3
+textBox.Parent = mainFrame
+
+local textCorner = Instance.new("UICorner")
+textCorner.CornerRadius = UDim.new(0, 8)
+textCorner.Parent = textBox
+
+local textStroke = Instance.new("UIStroke")
+textStroke.Color = Color3.fromRGB(45, 50, 70)
+textStroke.Parent = textBox
+
+-- 🔘 Primary Verification Button
+local verifyBtn = Instance.new("TextButton")
+verifyBtn.Size = UDim2.new(0, 312, 0, 48)
+verifyBtn.Position = UDim2.new(0.5, -156, 0, 226)
+verifyBtn.BackgroundColor3 = Color3.fromRGB(45, 48, 64)
+verifyBtn.BorderSizePixel = 0
+verifyBtn.Text = "Verify Access Key"
+verifyBtn.TextColor3 = Color3.fromRGB(230, 235, 245)
+verifyBtn.TextSize = 14
+verifyBtn.Font = Enum.Font.GothamMedium
+verifyBtn.ZIndex = 3
+verifyBtn.Parent = mainFrame
+
+local verifyCorner = Instance.new("UICorner")
+verifyCorner.CornerRadius = UDim.new(0, 8)
+verifyCorner.Parent = verifyBtn
+
+-- 🖼️ Secondary Multi-Button Footer
+local footer = Instance.new("Frame")
+footer.Size = UDim2.new(0, 312, 0, 44)
+footer.Position = UDim2.new(0.5, -156, 0, 286)
+footer.BackgroundTransparency = 1
+footer.ZIndex = 3
+footer.Parent = mainFrame
+
+local getKeyBtn = Instance.new("TextButton")
+getKeyBtn.Size = UDim2.new(0, 150, 1, 0)
+getKeyBtn.Position = UDim2.new(0, 0, 0, 0)
+getKeyBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
+getKeyBtn.BorderSizePixel = 0
+getKeyBtn.Text = "Get Key"
+getKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+getKeyBtn.TextSize = 14
+getKeyBtn.Font = Enum.Font.GothamMedium
+getKeyBtn.ZIndex = 4
+getKeyBtn.Parent = footer
+
+local getCorner = Instance.new("UICorner")
+getCorner.CornerRadius = UDim.new(0, 8)
+getCorner.Parent = getKeyBtn
+
+local discordBtn = Instance.new("TextButton")
+discordBtn.Size = UDim2.new(0, 150, 1, 0)
+discordBtn.Position = UDim2.new(1, -150, 0, 0)
+discordBtn.BackgroundColor3 = Color3.fromRGB(79, 70, 229)
+discordBtn.BorderSizePixel = 0
+discordBtn.Text = "Discord"
+discordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordBtn.TextSize = 14
+discordBtn.Font = Enum.Font.GothamMedium
+discordBtn.ZIndex = 4
+discordBtn.Parent = footer
+
+local discordCorner = Instance.new("UICorner")
+discordCorner.CornerRadius = UDim.new(0, 8)
+discordCorner.Parent = discordBtn
+
+-- 🔤 Alert Status Label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 24)
+statusLabel.Position = UDim2.new(0, 0, 1, -40)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = ""
+statusLabel.TextSize = 13
+statusLabel.Font = Enum.Font.GothamMedium
+statusLabel.ZIndex = 3
+statusLabel.Parent = mainFrame
+
+---------------------------------------------------------
+-- ⚙️ UX INTERACTION LOGIC
+---------------------------------------------------------
+local function applyHover(btn, norm, hov)
+    btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = hov}):Play() end)
+    btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = norm}):Play() end)
+end
+applyHover(verifyBtn, Color3.fromRGB(45, 48, 64), Color3.fromRGB(58, 62, 82))
+applyHover(getKeyBtn, Color3.fromRGB(16, 185, 129), Color3.fromRGB(22, 210, 145))
+applyHover(discordBtn, Color3.fromRGB(79, 70, 229), Color3.fromRGB(95, 85, 250))
+
+local function showStatus(txt, col)
+    statusLabel.Text = txt
+    statusLabel.TextColor3 = col
+end
+
+verifyBtn.MouseButton1Click:Connect(function()
+    local cleanInput = string.gsub(textBox.Text, "%s+", "")
+    if cleanInput == CORRECT_KEY then
+        showStatus("Access Granted! Executing runtime script...", Color3.fromRGB(16, 185, 129))
+        task.wait(1)
+        
+        local close = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+        close:Play()
+        close.Completed:Connect(function()
+            sgui:Destroy()
+            print("Target Script loaded successfully via Xeno context.")
+        end)
+    else
+        showStatus("Invalid key code. Please check again.", Color3.fromRGB(239, 68, 68))
+        textBox.Text = ""
+    end
+end)
+
+getKeyBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(GET_KEY_LINK)
+        showStatus("Key system gateway link copied to clipboard!", Color3.fromRGB(59, 130, 246))
+    else
+        textBox.Text = GET_KEY_LINK
+        showStatus("Clipboard failed. Copy URL text from input box.", Color3.fromRGB(234, 179, 8))
+    end
+end)
+
+discordBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(DISCORD_LINK)
+        showStatus("Discord server link copied to clipboard!", Color3.fromRGB(79, 70, 229))
+    else
+        textBox.Text = DISCORD_LINK
+        showStatus("Clipboard failed. Copy Discord link from input box.", Color3.fromRGB(234, 179, 8))
+    end
+end)
