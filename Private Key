@@ -551,6 +551,259 @@ end)
 
 
 
+
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KeySystem"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Dynamic Parent Assignment
+local success, err = pcall(function()
+    screenGui.Parent = CoreGui
+end)
+if not success then
+    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- ==========================================
+-- FIXED: BACK BLUR EFFECT
+-- ==========================================
+local blurContainer = Instance.new("Frame")
+blurContainer.Size = UDim2.new(1, 0, 1, 0)
+blurContainer.BackgroundTransparency = 1
+blurContainer.Parent = screenGui
+
+-- Added fallback: CoreGui scripts usually cannot inject into Lighting safely
+local blurEffect = Lighting:FindFirstChild("KyoSystemBlur") or Instance.new("BlurEffect")
+blurEffect.Name = "KyoSystemBlur"
+blurEffect.Size = 15 
+blurEffect.Parent = Lighting
+
+-- Create Modern Background Frame (INCREASED SIZE & ADJUSTED POSITION)
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 440, 0, 310) -- Increased width to 440 and height to 310
+frame.Position = UDim2.new(0.5, -220, 0.5, -155) -- Centered perfectly for the new size
+frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12) 
+frame.BackgroundTransparency = 0.15 
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true 
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14) -- Slightly increased radius to match larger size
+frameCorner.Parent = frame
+
+-- Neon Border Accent
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(0, 255, 150) 
+borderStroke.Thickness = 1.5
+borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderStroke.Parent = frame
+
+-- Create Title Label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60) -- Increased title area height
+title.BackgroundTransparency = 1
+title.Text = "KEY SYSTEM" -- Restored sample text to fix formatting layout
+title.TextColor3 = Color3.fromRGB(0, 255, 150)
+title.TextSize = 18 -- Slightly larger text size
+title.Font = Enum.Font.RobotoMono
+title.Parent = frame
+
+-- Create TextBox (Input Field)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0.85, 0, 0, 44) -- Increased thickness/height of input field
+textBox.Position = UDim2.new(0.075, 0, 0.22, 0) -- Adjusted position layout
+textBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.PlaceholderText = "Enter Access Token..."
+textBox.PlaceholderColor3 = Color3.fromRGB(90, 90, 90)
+textBox.TextSize = 15 -- Increased font size
+textBox.Text = ""
+textBox.Font = Enum.Font.RobotoMono
+textBox.ClearTextOnFocus = false
+textBox.Parent = frame
+
+local textCorner = Instance.new("UICorner")
+textCorner.CornerRadius = UDim.new(0, 8)
+textCorner.Parent = textBox
+
+local textStroke = Instance.new("UIStroke")
+textStroke.Color = Color3.fromRGB(35, 35, 35)
+textStroke.Thickness = 1
+textStroke.Parent = textBox
+
+-- Create Submit Button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.85, 0, 0, 46) -- Increased height
+button.Position = UDim2.new(0.075, 0, 0.48, 0) -- Scaled layout spacing
+button.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+button.TextColor3 = Color3.fromRGB(10, 10, 10)
+button.Text = "Verify"
+button.TextSize = 15 -- Scaled font size up
+button.Font = Enum.Font.RobotoMono
+button.AutoButtonColor = false 
+button.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = button
+
+-- Create Get Key Button
+local getKeyButton = Instance.new("TextButton")
+getKeyButton.Size = UDim2.new(0.85, 0, 0, 46) -- Increased height
+getKeyButton.Position = UDim2.new(0.075, 0, 0.73, 0) -- Scaled layout spacing
+getKeyButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+getKeyButton.TextColor3 = Color3.fromRGB(0, 255, 150)
+getKeyButton.Text = "GET KEY"
+getKeyButton.TextSize = 15 -- Scaled font size up
+getKeyButton.Font = Enum.Font.RobotoMono
+getKeyButton.AutoButtonColor = false 
+getKeyButton.Parent = frame
+
+local getKeyCorner = Instance.new("UICorner")
+getKeyCorner.CornerRadius = UDim.new(0, 8)
+getKeyCorner.Parent = getKeyButton
+
+local getKeyStroke = Instance.new("UIStroke")
+getKeyStroke.Color = Color3.fromRGB(0, 255, 150)
+getKeyStroke.Thickness = 1
+getKeyStroke.Parent = getKeyButton
+
+-- Put main frame inside blur container to layer properly
+frame.Parent = blurContainer
+
+-- ==========================================
+-- INTERACTIVE TWEEN ANIMATIONS
+-- ==========================================
+local function tween(object, info, properties)
+    return TweenService:Create(object, info, properties)
+end
+
+local infoFast = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local infoSlow = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- TextBox Focus Tweens
+textBox.Focused:Connect(function()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(0, 255, 150)}):Play()
+end)
+
+textBox.FocusLost:Connect(function()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(35, 35, 35)}):Play()
+end)
+
+-- Submit Button Hover Tweens
+button.MouseEnter:Connect(function()
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(50, 255, 180)}):Play()
+end)
+
+button.MouseLeave:Connect(function()
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 150)}):Play()
+end)
+
+-- Get Key Button Hover Tweens
+getKeyButton.MouseEnter:Connect(function()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+end)
+
+getKeyButton.MouseLeave:Connect(function()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(22, 22, 22)}):Play()
+end)
+
+-- ==========================================
+-- BUTTON FUNCTIONALITIES
+-- ==========================================
+local KEY_LINK = "https://linkvertise.com" 
+local CORRECT_KEY = "PrivateScript1"
+local isProcessing = false
+
+-- Get Key Functionality
+getKeyButton.MouseButton1Click:Connect(function()
+    local oldText = getKeyButton.Text
+    
+    if setclipboard then
+        setclipboard(KEY_LINK)
+        getKeyButton.Text = "COPIED TO CLIPBOARD!"
+    else
+        getKeyButton.Text = "NOT SUPPORTED BY EXECUTOR"
+    end
+    
+    task.wait(2)
+    getKeyButton.Text = oldText
+end)
+
+-- Key System Logic & Broken Loadstring Fix
+button.MouseButton1Click:Connect(function()
+    if isProcessing then return end
+    isProcessing = true
+    
+    local input = textBox.Text
+    
+    if input == CORRECT_KEY then
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 200, 100), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        tween(borderStroke, infoFast, {Color = Color3.fromRGB(0, 255, 0)}):Play()
+        button.Text = "ACCESS GRANTED"
+        
+        task.wait(1)
+        button.Text = "LOADING SCRIPT..."
+        task.wait(0.8)
+        
+        tween(frame, infoSlow, {BackgroundTransparency = 1}):Play()
+        tween(title, infoSlow, {TextTransparency = 1}):Play()
+        tween(textBox, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        tween(textStroke, infoSlow, {Transparency = 1}):Play()
+        tween(button, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        tween(getKeyButton, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        tween(getKeyStroke, infoSlow, {Transparency = 1}):Play()
+        tween(borderStroke, infoSlow, {Transparency = 1}):Play()
+        
+        local blurFade = tween(blurEffect, infoSlow, {Size = 0})
+        blurFade:Play()
+        
+        blurFade.Completed:Connect(function()
+            blurEffect:Destroy()
+            screenGui:Destroy()
+            
+            -- FIXED: Completed the broken syntax from your original snippet safely
+            local execSuccess, execErr = pcall(function()
+                local rawScript = game:HttpGet("https://raw.githubusercontent.com/IVRzHxZ/Kyo-Private-Muscle-Beach-Arena/refs/heads/main/Kyo-Private")
+                local func, parseErr = loadstring(rawScript)
+                if func then
+                    func()
+                else
+                    error("Parsing Error: " .. tostring(parseErr))
+                end
+            end)
+            if not execSuccess then
+                warn("Execution failed: " .. tostring(execErr))
+            end
+        end)
+    else
+        -- Incorrect key visual indicator
+        button.Text = "INVALID KEY"
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 50, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        task.wait(1.5)
+        button.Text = "Verify"
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 150), TextColor3 = Color3.fromRGB(10, 10, 10)}):Play()
+        isProcessing = false
+    end
+end)
+
+
+
+
+
+
+
+
+
 new version Key!!!!!!!!!!!!!!
 
 
