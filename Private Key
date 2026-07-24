@@ -1211,7 +1211,7 @@ button.Position = UDim2.new(0.075, 0, 0.48, 0)
 button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 button.TextColor3 = Color3.fromRGB(20, 0, 0) -- Dark red contrast text
 button.Text = "Verify"
-button.TextSize = 15 
+button.TextSize = 18
 button.Font = Enum.Font.RobotoMono
 button.AutoButtonColor = false 
 button.Parent = frame
@@ -1254,6 +1254,9 @@ end
 local infoFast = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local infoSlow = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
+-- Global Processing State Variable
+local isProcessing = false
+
 -- TextBox Active Interaction States
 textBox.Focused:Connect(function()
     tween(textStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0), Thickness = 1.5}):Play()
@@ -1263,10 +1266,15 @@ textBox.FocusLost:Connect(function()
     tween(textStroke, infoFast, {Color = Color3.fromRGB(120, 20, 20), Thickness = 1}):Play()
 end)
 
--- Main Verification Action Hover States
+-- Main Verification Action Hover States (FIXED: Reset colors on Leave)
 button.MouseEnter:Connect(function()
-    if isProcessing and button.Text == "ACCESS GRANTED" then return end
+    if isProcessing then return end
     tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+end)
+
+button.MouseLeave:Connect(function()
+    if isProcessing then return end
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play()
 end)
 
 -- Secondary Action Hover States
@@ -1283,7 +1291,6 @@ end)
 -- ==========================================
 local KEY_LINK = "https://linkvertise.com" 
 local CORRECT_KEY = "PrivateScript1"
-local isProcessing = false
 
 -- DELTA COMPATIBLE: Clipboard Functionality
 getKeyButton.MouseButton1Click:Connect(function()
@@ -1301,7 +1308,7 @@ getKeyButton.MouseButton1Click:Connect(function()
     getKeyButton.Text = oldText
 end)
 
--- Crimson Logic Processing System
+-- Crimson Logic Processing System (FIXED: Added Handle for Invalid Key Input)
 button.MouseButton1Click:Connect(function()
     if isProcessing then return end
     isProcessing = true
@@ -1311,7 +1318,7 @@ button.MouseButton1Click:Connect(function()
     if input == CORRECT_KEY then
         button.Text = "ACCESS GRANTED"
         
-        -- GREEN BUTTON + WHITE TEXT: Changes button to green, text to white, while frame border stays red
+        -- GREEN BUTTON + WHITE TEXT
         tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 120), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
         tween(borderStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0)}):Play() 
         
@@ -1327,38 +1334,22 @@ button.MouseButton1Click:Connect(function()
         tween(getKeyStroke, infoSlow, {Transparency = 1}):Play()
         tween(borderStroke, infoSlow, {Transparency = 1}):Play()
         
-        local blurFade = tween(blurEffect, infoSlow, {Size = 0})
-        blurFade:Play()
-        
-        blurFade.Completed:Connect(function()
-            blurEffect:Destroy()
-            screenGui:Destroy()
-            
-            -- Safe script injection execution segment
-            local execSuccess, execErr = pcall(function()
-                local rawScript = game:HttpGet("https://raw.githubusercontent.com")
-                loadstring(rawScript)()
-            end)
-            
-            if not execSuccess then
-                warn("Script failed to execute properly via executor: " .. tostring(execErr))
-            end
-        end)
+        task.wait(0.4)
+        blurEffect:Destroy()
+        screenGui:Destroy()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com"))()
     else
-        local originalBtnColor = button.BackgroundColor3
-        local originalTxtColor = button.TextColor3
-        local originalBorderColor = borderStroke.Color
-        
+        -- Logic kapag MALI ang nilagay na key
         button.Text = "INVALID KEY"
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(100, 0, 0), TextColor3 = Color3.fromRGB(255, 100, 100)}):Play()
-        tween(borderStroke, infoFast, {Color = Color3.fromRGB(180, 0, 0)}):Play()
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(150, 0, 0), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
         
-        task.wait(2.2)
+        task.wait(1.5)
         
+        -- Ibalik sa orihinal na kulay red at text na "Verify"
         button.Text = "Verify"
-        tween(button, infoFast, {BackgroundColor3 = originalBtnColor, TextColor3 = originalTxtColor}):Play()
-        tween(borderStroke, infoFast, {Color = originalBorderColor}):Play()
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0), TextColor3 = Color3.fromRGB(20, 0, 0)}):Play()
         
+        -- Payagan ulit pumindot ang user para mag-retry
         isProcessing = false
     end
 end)
