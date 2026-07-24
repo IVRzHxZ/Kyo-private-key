@@ -1104,22 +1104,18 @@ Pro key system
 
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
+
+-- DELTA FIX: Target PlayerGui directly to prevent CoreGui parent crashes on mobile
+local localPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 
 -- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "KeySystem"
+screenGui.Name = "RedKeySystem"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- Dynamic Parent Assignment
-local success, err = pcall(function()
-    screenGui.Parent = CoreGui
-end)
-if not success then
-    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-end
+screenGui.Parent = playerGui
 
 -- ==========================================
 -- BACK BLUR EFFECT
@@ -1134,33 +1130,53 @@ blurEffect.Name = "KyoSystemBlur"
 blurEffect.Size = 15 
 blurEffect.Parent = Lighting
 
--- Create Modern Background Frame
+-- Create Pure Crimson Background Frame
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 440, 0, 310) 
 frame.Position = UDim2.new(0.5, -220, 0.5, -155) 
-frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12) 
-frame.BackgroundTransparency = 0.15 
+frame.BackgroundColor3 = Color3.fromRGB(20, 5, 5) -- Pure deep red dark theme
+frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 0
 frame.Active = true
-frame.Draggable = true 
+
+-- Mobile-friendly drag implementation (Replaces deprecated .Draggable property)
+local dragToggle, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = false
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragToggle = false end
+        end)
+    end
+end)
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragToggle then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end
+end)
 
 local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0, 14) 
 frameCorner.Parent = frame
 
--- CHANGED TO RED: Neon Border Accent
+-- FULL RED: Intense Neon Border Accent
 local borderStroke = Instance.new("UIStroke")
-borderStroke.Color = Color3.fromRGB(255, 50, 50) 
-borderStroke.Thickness = 1.5
+borderStroke.Color = Color3.fromRGB(255, 0, 0) 
+borderStroke.Thickness = 2
 borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 borderStroke.Parent = frame
 
--- CHANGED TO RED: Create Title Label
+-- FULL RED: Title Label
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 60) 
 title.BackgroundTransparency = 1
 title.Text = "KEY SYSTEM" 
-title.TextColor3 = Color3.fromRGB(255, 50, 50)
+title.TextColor3 = Color3.fromRGB(255, 0, 0)
 title.TextSize = 18 
 title.Font = Enum.Font.RobotoMono
 title.Parent = frame
@@ -1169,10 +1185,10 @@ title.Parent = frame
 local textBox = Instance.new("TextBox")
 textBox.Size = UDim2.new(0.85, 0, 0, 44) 
 textBox.Position = UDim2.new(0.075, 0, 0.22, 0) 
-textBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.BackgroundColor3 = Color3.fromRGB(35, 10, 10) -- Red-tinted background input
+textBox.TextColor3 = Color3.fromRGB(255, 200, 200)
 textBox.PlaceholderText = "Enter Access Key..."
-textBox.PlaceholderColor3 = Color3.fromRGB(90, 90, 90)
+textBox.PlaceholderColor3 = Color3.fromRGB(150, 60, 60)
 textBox.TextSize = 15 
 textBox.Text = ""
 textBox.Font = Enum.Font.RobotoMono
@@ -1184,16 +1200,16 @@ textCorner.CornerRadius = UDim.new(0, 8)
 textCorner.Parent = textBox
 
 local textStroke = Instance.new("UIStroke")
-textStroke.Color = Color3.fromRGB(35, 35, 35)
+textStroke.Color = Color3.fromRGB(120, 20, 20)
 textStroke.Thickness = 1
 textStroke.Parent = textBox
 
--- CHANGED TO RED: Create Submit Button
+-- FULL RED: Submit Button
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0.85, 0, 0, 46) 
 button.Position = UDim2.new(0.075, 0, 0.48, 0) 
-button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-button.TextColor3 = Color3.fromRGB(10, 10, 10)
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.TextColor3 = Color3.fromRGB(20, 0, 0) -- Dark red contrast text
 button.Text = "Verify"
 button.TextSize = 15 
 button.Font = Enum.Font.RobotoMono
@@ -1204,11 +1220,11 @@ local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 8)
 buttonCorner.Parent = button
 
--- CHANGED TO RED: Create Get Key Button
+-- FULL RED: Get Key Button Layout
 local getKeyButton = Instance.new("TextButton")
 getKeyButton.Size = UDim2.new(0.85, 0, 0, 46) 
 getKeyButton.Position = UDim2.new(0.075, 0, 0.73, 0) 
-getKeyButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+getKeyButton.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
 getKeyButton.TextColor3 = Color3.fromRGB(255, 50, 50)
 getKeyButton.Text = "GET KEY"
 getKeyButton.TextSize = 15 
@@ -1220,75 +1236,72 @@ local getKeyCorner = Instance.new("UICorner")
 getKeyCorner.CornerRadius = UDim.new(0, 8)
 getKeyCorner.Parent = getKeyButton
 
--- CHANGED TO RED: Get Key Border Stroke
 local getKeyStroke = Instance.new("UIStroke")
-getKeyStroke.Color = Color3.fromRGB(255, 50, 50)
+getKeyStroke.Color = Color3.fromRGB(255, 0, 0)
 getKeyStroke.Thickness = 1
 getKeyStroke.Parent = getKeyButton
 
--- Put main frame inside blur container to layer properly
+-- Wrap layout components into container 
 frame.Parent = blurContainer
 
 -- ==========================================
--- INTERACTIVE TWEEN ANIMATIONS
+-- INTERACTIVE RED TWEEN ANIMATIONS
 -- ==========================================
 local function tween(object, info, properties)
     return TweenService:Create(object, info, properties)
 end
 
-local infoFast = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local infoFast = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local infoSlow = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- CHANGED TO RED: TextBox Focus Tweens
+-- TextBox Active Interaction States
 textBox.Focused:Connect(function()
-    tween(textStroke, infoFast, {Color = Color3.fromRGB(255, 50, 50)}):Play()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0), Thickness = 1.5}):Play()
 end)
 
 textBox.FocusLost:Connect(function()
-    tween(textStroke, infoFast, {Color = Color3.fromRGB(35, 35, 35)}):Play()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(120, 20, 20), Thickness = 1}):Play()
 end)
 
--- CHANGED TO RED VARIANT: Submit Button Hover Tweens
+-- Main Verification Action Hover States
 button.MouseEnter:Connect(function()
-    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 90, 90)}):Play()
+    if isProcessing and button.Text == "ACCESS GRANTED" then return end
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
 end)
 
-button.MouseLeave:Connect(function()
-    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
-end)
-
--- Get Key Button Hover Tweens
+-- Secondary Action Hover States
 getKeyButton.MouseEnter:Connect(function()
-    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(70, 15, 15)}):Play()
 end)
 
 getKeyButton.MouseLeave:Connect(function()
-    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(22, 22, 22)}):Play()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(40, 10, 10)}):Play()
 end)
 
 -- ==========================================
--- BUTTON FUNCTIONALITIES
+-- DELTA INTERACTION PROCESSING
 -- ==========================================
 local KEY_LINK = "https://linkvertise.com" 
 local CORRECT_KEY = "PrivateScript1"
 local isProcessing = false
 
--- Get Key Functionality
+-- DELTA COMPATIBLE: Clipboard Functionality
 getKeyButton.MouseButton1Click:Connect(function()
     local oldText = getKeyButton.Text
+    local clipFunc = setclipboard or toclipboard or (Clipboard and Clipboard.set)
     
-    if setclipboard then
-        setclipboard(KEY_LINK)
+    if clipFunc then
+        clipFunc(KEY_LINK)
         getKeyButton.Text = "COPIED TO CLIPBOARD!"
     else
-        getKeyButton.Text = "NOT SUPPORTED BY EXECUTOR"
+        getKeyButton.Text = "FAILED TO AUTO-COPY KEY"
     end
     
     task.wait(2)
     getKeyButton.Text = oldText
 end)
 
--- Key System Logic & FIXED LOADSTRING SYNTAX
+-- Crimson Logic Processing System
 button.MouseButton1Click:Connect(function()
     if isProcessing then return end
     isProcessing = true
@@ -1296,15 +1309,15 @@ button.MouseButton1Click:Connect(function()
     local input = textBox.Text
     
     if input == CORRECT_KEY then
-        -- Changed success animations to green/dark red transitions properly
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 200, 100), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-        tween(borderStroke, infoFast, {Color = Color3.fromRGB(0, 255, 0)}):Play()
         button.Text = "ACCESS GRANTED"
         
-        task.wait(1)
-        button.Text = "ACCESS GRANTED"
-        task.wait(0.8)
+        -- GREEN BUTTON + WHITE TEXT: Changes button to green, text to white, while frame border stays red
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 120), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        tween(borderStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0)}):Play() 
         
+        task.wait(1.2)
+        
+        -- Clean structural fade-out transition sequence
         tween(frame, infoSlow, {BackgroundTransparency = 1}):Play()
         tween(title, infoSlow, {TextTransparency = 1}):Play()
         tween(textBox, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
@@ -1321,23 +1334,31 @@ button.MouseButton1Click:Connect(function()
             blurEffect:Destroy()
             screenGui:Destroy()
             
-            -- FIXED: Completely closed and executed the raw script URL string
+            -- Safe script injection execution segment
             local execSuccess, execErr = pcall(function()
-                local rawScript = game:HttpGet("https://raw.githubusercontent.com/IVRzHxZ/Kyo-Private-Muscle-Beach-Arena/refs/heads/main/Kyo-Priv")
+                local rawScript = game:HttpGet("https://raw.githubusercontent.com")
                 loadstring(rawScript)()
             end)
             
             if not execSuccess then
-                warn("Script failed to run: " .. tostring(execErr))
+                warn("Script failed to execute properly via executor: " .. tostring(execErr))
             end
         end)
     else
-        -- Added dynamic error alert color change on wrong key
+        local originalBtnColor = button.BackgroundColor3
+        local originalTxtColor = button.TextColor3
+        local originalBorderColor = borderStroke.Color
+        
         button.Text = "INVALID KEY"
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(150, 0, 0)}):Play()
-        task.wait(2)
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(100, 0, 0), TextColor3 = Color3.fromRGB(255, 100, 100)}):Play()
+        tween(borderStroke, infoFast, {Color = Color3.fromRGB(180, 0, 0)}):Play()
+        
+        task.wait(2.2)
+        
         button.Text = "Verify"
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
+        tween(button, infoFast, {BackgroundColor3 = originalBtnColor, TextColor3 = originalTxtColor}):Play()
+        tween(borderStroke, infoFast, {Color = originalBorderColor}):Play()
+        
         isProcessing = false
     end
 end)
