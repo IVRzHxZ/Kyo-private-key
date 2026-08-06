@@ -1,1096 +1,3 @@
--- Configuration Settings
-local CORRECT_KEY = "K"
-local GET_KEY_LINK = "https://linkvertise.com"
-local DISCORD_LINK = "https://discord.gg"
-
--- 🖼️ ILAGAY ANG MGA ASSET ID DITO (Mga numero lang mula sa Roblox Creator Dashboard o URL)
-local LOGO_ID = "131431625957379"            -- ID ng iyong logo icon sa itaas
-local BACKGROUND_ID = ""      -- ID para sa likod ng buong screen (gawing plain/dark)
-
--- Pag-format sa tamang Roblox Asset URL string
-local function parseAsset(id)
-    local num = string.match(tostring(id), "%d+")
-    return num and ("rbxassetid://" .. num) or ""
-end
-
-local LOGO_IMAGE_ID = parseAsset(LOGO_ID)
-local BACKGROUND_IMAGE_ID = parseAsset(BACKGROUND_ID)
-
--- Services
-local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
-
--- 🛡️ ScreenGui Container Injection
-local sgui = Instance.new("ScreenGui")
-sgui.Name = "XenoKeySystemContainer"
-sgui.IgnoreGuiInset = true
-sgui.ResetOnSpawn = false
-
-pcall(function() sgui.Parent = CoreGui end)
-if not sgui.Parent then
-    sgui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-end
-
--- 🌌 1. Full Screen Canvas (Plain o Dark Grid Background)
-local bgFrame = Instance.new("ImageLabel")
-bgFrame.Size = UDim2.new(1, 0, 1, 0)
-bgFrame.Image = BACKGROUND_IMAGE_ID
-bgFrame.ScaleType = Enum.ScaleType.Crop
-bgFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 18)
-bgFrame.BorderSizePixel = 0
-bgFrame.Parent = sgui
-
--- ⬜ 2. Main Container Box (Ang mismong madilim na kahon sa gitna)
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 360, 0, 440)
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 21, 28)
-mainFrame.BorderSizePixel = 0
-mainFrame.ClipsDescendants = true -- Pinipigilan ang paglabas ng bubbles sa labas ng frame
-mainFrame.Parent = sgui
-
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 14)
-mainCorner.Parent = mainFrame
-
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(45, 49, 66)
-mainStroke.Thickness = 1.2
-mainStroke.Parent = mainFrame
-
--- 🫧 3. DYNAMIC BUBBLE ENGINE (No Asset IDs needed, pure UI generation)
-local bubbleContainer = Instance.new("Frame")
-bubbleContainer.Size = UDim2.new(1, 0, 1, 0)
-bubbleContainer.BackgroundTransparency = 1
-bubbleContainer.ZIndex = 2 -- Naka-angat pero nasa ilalim pa rin ng text elements
-bubbleContainer.Parent = mainFrame
-
-task.spawn(function()
-    local rng = Random.new()
-    while task.wait(rng:NextNumber(0.4, 0.9)) do -- Rate ng pag-spawn ng bubbles
-        if not bubbleContainer or not bubbleContainer.Parent then break end
-        
-        local bubble = Instance.new("Frame")
-        local size = rng:NextInteger(8, 22) -- Random na laki ng bilog
-        
-        bubble.Size = UDim2.new(0, size, 0, size)
-        -- Nag-sspawn kahit saan sa ilalim ng MainFrame panel
-        bubble.Position = UDim2.new(rng:NextNumber(0.05, 0.95), 0, 1, 10)
-        bubble.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        bubble.BackgroundTransparency = rng:NextNumber(0.75, 0.88) -- Malabong bula para aesthetic
-        bubble.ZIndex = 2
-        bubble.Parent = bubbleContainer
-
-        local bCorner = Instance.new("UICorner")
-        bCorner.CornerRadius = UDim.new(1, 0) -- Ginagawang perpektong bilog ang Frame
-        bCorner.Parent = bubble
-
-        -- Physics: Itataas ang posisyon habang gumagalaw pakaliwa/pakanan ng kaunti
-        local targetXOffset = rng:NextInteger(-30, 30)
-        local floatTime = rng:NextNumber(4, 7) -- Gaano kabilis lumutang pataas
-
-        local floatTween = TweenService:Create(bubble, TweenInfo.new(floatTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(bubble.Position.X.Scale, targetXOffset, -0.1, 0)
-        })
-        
-        local fadeTween = TweenService:Create(bubble, TweenInfo.new(floatTime * 0.4, Enum.EasingStyle.QuadIn, Enum.EasingDirection.In, 0, false, floatTime * 0.6), {
-            BackgroundTransparency = 1
-        })
-
-        floatTween:Play()
-        fadeTween:Play()
-
-        -- Memory Leak Prevention: Sinisira ang object kapag tapos na lumipad pataas
-        task.delay(floatTime, function()
-            bubble:Destroy()
-        end)
-    end
-end)
-
--- 🖼️ 4. Logo Badge Area
-local logoBox = Instance.new("Frame")
-logoBox.Size = UDim2.new(0, 54, 0, 54)
-logoBox.Position = UDim2.new(0.5, -27, 0, 24)
-logoBox.BackgroundColor3 = Color3.fromRGB(28, 30, 41)
-logoBox.BorderSizePixel = 0
-logoBox.ZIndex = 3
-logoBox.Parent = mainFrame
-
-local logoCorner = Instance.new("UICorner")
-logoCorner.CornerRadius = UDim.new(0, 10)
-logoCorner.Parent = logoBox
-
-local logoStroke = Instance.new("UIStroke")
-logoStroke.Color = Color3.fromRGB(60, 65, 85)
-logoStroke.Thickness = 1
-logoStroke.Parent = logoBox
-
-local logoImage = Instance.new("ImageLabel")
-logoImage.Size = UDim2.new(0.8, 0, 0.8, 0)
-logoImage.Position = UDim2.new(0.1, 0, 0.1, 0)
-logoImage.BackgroundTransparency = 1
-logoImage.Image = LOGO_IMAGE_ID
-logoImage.ZIndex = 4
-logoImage.Parent = logoBox
-
--- 🔤 Title Headings
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 24)
-title.Position = UDim2.new(0, 0, 0, 96)
-title.BackgroundTransparency = 1
-title.Text = "Access Key Required"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 20
-title.Font = Enum.Font.GothamBold
-title.ZIndex = 3
-title.Parent = mainFrame
-
-local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, 0, 0, 20)
-subtitle.Position = UDim2.new(0, 0, 0, 122)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "Enter your access key to continue"
-subtitle.TextColor3 = Color3.fromRGB(170, 175, 195)
-subtitle.TextSize = 12
-subtitle.Font = Enum.Font.Gotham
-subtitle.ZIndex = 3
-subtitle.Parent = mainFrame
-
--- ✍️ Input Area (TextBox)
-local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0, 312, 0, 48)
-textBox.Position = UDim2.new(0.5, -156, 0, 164)
-textBox.BackgroundColor3 = Color3.fromRGB(25, 27, 38)
-textBox.BorderSizePixel = 0
-textBox.Text = ""
-textBox.PlaceholderText = "Enter key here..."
-textBox.PlaceholderColor3 = Color3.fromRGB(90, 95, 115)
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.TextSize = 14
-textBox.Font = Enum.Font.Gotham
-textBox.ClearTextOnFocus = false
-textBox.ZIndex = 3
-textBox.Parent = mainFrame
-
-local textCorner = Instance.new("UICorner")
-textCorner.CornerRadius = UDim.new(0, 8)
-textCorner.Parent = textBox
-
-local textStroke = Instance.new("UIStroke")
-textStroke.Color = Color3.fromRGB(45, 50, 70)
-textStroke.Parent = textBox
-
--- 🔘 Primary Verification Button
-local verifyBtn = Instance.new("TextButton")
-verifyBtn.Size = UDim2.new(0, 312, 0, 48)
-verifyBtn.Position = UDim2.new(0.5, -156, 0, 226)
-verifyBtn.BackgroundColor3 = Color3.fromRGB(45, 48, 64)
-verifyBtn.BorderSizePixel = 0
-verifyBtn.Text = "Verify Access Key"
-verifyBtn.TextColor3 = Color3.fromRGB(230, 235, 245)
-verifyBtn.TextSize = 14
-verifyBtn.Font = Enum.Font.GothamMedium
-verifyBtn.ZIndex = 3
-verifyBtn.Parent = mainFrame
-
-local verifyCorner = Instance.new("UICorner")
-verifyCorner.CornerRadius = UDim.new(0, 8)
-verifyCorner.Parent = verifyBtn
-
--- 🖼 " Secondary Multi-Button Footer
-local footer = Instance.new("Frame")
-footer.Size = UDim2.new(0, 312, 0, 44)
-footer.Position = UDim2.new(0.5, -156, 0, 286)
-footer.BackgroundTransparency = 1
-footer.ZIndex = 3
-footer.Parent = mainFrame
-
-local getKeyBtn = Instance.new("TextButton")
-getKeyBtn.Size = UDim2.new(0, 150, 1, 0)
-getKeyBtn.Position = UDim2.new(0, 0, 0, 0)
-getKeyBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
-getKeyBtn.BorderSizePixel = 0
-getKeyBtn.Text = "Get Key"
-getKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-getKeyBtn.TextSize = 14
-getKeyBtn.Font = Enum.Font.GothamMedium
-getKeyBtn.ZIndex = 4
-getKeyBtn.Parent = footer
-
-local getCorner = Instance.new("UICorner")
-getCorner.CornerRadius = UDim.new(0, 8)
-getCorner.Parent = getKeyBtn
-
-local discordBtn = Instance.new("TextButton")
-discordBtn.Size = UDim2.new(0, 150, 1, 0)
-discordBtn.Position = UDim2.new(1, -150, 0, 0)
-discordBtn.BackgroundColor3 = Color3.fromRGB(79, 70, 229)
-discordBtn.BorderSizePixel = 0
-discordBtn.Text = "Discord"
-discordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-discordBtn.TextSize = 14
-discordBtn.Font = Enum.Font.GothamMedium
-discordBtn.ZIndex = 4
-discordBtn.Parent = footer
-
-local discordCorner = Instance.new("UICorner")
-discordCorner.CornerRadius = UDim.new(0, 8)
-discordCorner.Parent = discordBtn
-
--- 🔤 Alert Status Label
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0, 24)
-statusLabel.Position = UDim2.new(0, 0, 1, -40)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = ""
-statusLabel.TextSize = 13
-statusLabel.Font = Enum.Font.GothamMedium
-statusLabel.ZIndex = 3
-statusLabel.Parent = mainFrame
-
----------------------------------------------------------
--- ⚙️ UX INTERACTION LOGIC
----------------------------------------------------------
-local function applyHover(btn, norm, hov)
-    btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = hov}):Play() end)
-    btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = norm}):Play() end)
-end
-applyHover(verifyBtn, Color3.fromRGB(45, 48, 64), Color3.fromRGB(58, 62, 82))
-applyHover(getKeyBtn, Color3.fromRGB(16, 185, 129), Color3.fromRGB(22, 210, 145))
-applyHover(discordBtn, Color3.fromRGB(79, 70, 229), Color3.fromRGB(95, 85, 250))
-
-local function showStatus(txt, col)
-    statusLabel.Text = txt
-    statusLabel.TextColor3 = col
-    task.delay(3, function()
-        if statusLabel.Text == txt then statusLabel.Text = "" end
-    end)
-end
-
--- Key Verification Execution Logic
-verifyBtn.MouseButton1Click:Connect(function()
-    if textBox.Text == CORRECT_KEY then
-        showStatus("Access Granted! Loading script...", Color3.fromRGB(16, 185, 129))
-        task.wait(1)
-        sgui:Destroy()
-        -- Ipasok ang execution script mo rito
-    else
-        showStatus("Invalid Key! Try again.", Color3.fromRGB(239, 68, 68))
-    end
-end)
-
--- Clipboard Link Copy Fallbacks
-getKeyBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(GET_KEY_LINK)
-        showStatus("Key link copied to clipboard!", Color3.fromRGB(59, 130, 246))
-    else
-        showStatus("Error: Clipboard hook missing.", Color3.fromRGB(239, 68, 68))
-    end
-end)
-
-discordBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(DISCORD_LINK)
-        showStatus("Discord invite copied!", Color3.fromRGB(59, 130, 246))
-    else
-        showStatus("Error: Clipboard hook missing.", Color3.fromRGB(239, 68, 68))
-    end
-end)
-
-
-
-
-
-
-👆
-Black 🖤
-
-
-Rainbow 🌈 
-👇
-
-
-
-
--- WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
--- =========================================================================
--- CONFIGURATION
--- =========================================================================
-local ActualKey = "Kyokkk"
-local ScriptURL = "https://raw.githubusercontent.com/IVRzHxZ/KyoPrivates/refs/heads/main/KyoPrivates"
-local KeyLink = "" 
-
--- REPLACE THIS: Put ONLY the numeric ID or the full rbxassetid:// link here
-local ImageID = "rbxassetid://131431625957379" 
--- =========================================================================
-
--- Clean up the input ID string format automatically
-if tonumber(ImageID) then
-	ImageID = "rbxassetid://131431625957379" .. ImageID
-elseif not string.find(ImageID, "rbxassetid://131431625957379") and not string.find(ImageID, "http") then
-	local cleanId = string.match(ImageID, "%d+")
-	if cleanId then ImageID = "rbxassetid://131431625957379" .. cleanId end
-end
-
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local UIStroke = Instance.new("UIStroke")
-local BackgroundImage = Instance.new("ImageLabel") 
-local Title = Instance.new("TextLabel")
-local CloseBtn = Instance.new("TextButton")
-local KeyBox = Instance.new("TextBox")
-local VerifyBtn = Instance.new("TextButton")
-local GetKeyBtn = Instance.new("TextButton")
-local InfoLabel = Instance.new("TextLabel")
-local StepLabel = Instance.new("TextLabel")
-
-ScreenGui.Name = "KeySystem"
-ScreenGui.Parent = game:GetService("CoreGui")
-
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-MainFrame.Size = UDim2.new(0, 320, 0, 260)
-MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.ClipsDescendants = true
-
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
-
-UIStroke.Color = Color3.fromRGB(70, 70, 80)
-UIStroke.Thickness = 3
-UIStroke.Parent = MainFrame
-
--- Setup Background Image
-BackgroundImage.Name = "BackgroundImage"
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
-BackgroundImage.BackgroundTransparency = 0.1 
-BackgroundImage.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-BackgroundImage.Image = ImageID
-BackgroundImage.ScaleType = Enum.ScaleType.Crop 
-BackgroundImage.ZIndex = 1 
-BackgroundImage.Parent = MainFrame
-
-local ImgCorner = Instance.new("UICorner")
-ImgCorner.CornerRadius = UDim.new(0, 10)
-ImgCorner.Parent = BackgroundImage
-
--- Set ZIndex higher on elements so they stay visible over the image layer
-Title.ZIndex = 5
-CloseBtn.ZIndex = 5
-InfoLabel.ZIndex = 5
-StepLabel.ZIndex = 5
-KeyBox.ZIndex = 5
-GetKeyBtn.ZIndex = 5
-VerifyBtn.ZIndex = 5
-
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.BackgroundTransparency = 1
-Title.Text = "KEY SYSTEM"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 22
-Title.Parent = MainFrame
-
-CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-CloseBtn.Position = UDim2.new(1, -35, 0, 10)
-CloseBtn.BackgroundTransparency = 1
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-CloseBtn.TextSize = 20
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.Parent = MainFrame
-
-InfoLabel.Size = UDim2.new(1, 0, 0, 20)
-InfoLabel.Position = UDim2.new(0, 0, 0, 50)
-InfoLabel.Text = "Kyo~Private" .. KeyLink
-InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-InfoLabel.Font = Enum.Font.Gotham
-InfoLabel.TextSize = 12
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Parent = MainFrame
-
-StepLabel.Size = UDim2.new(1, 0, 0, 40)
-StepLabel.Position = UDim2.new(0, 0, 0, 75)
-StepLabel.Text = "Private~Key"
-StepLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-StepLabel.Font = Enum.Font.Gotham
-StepLabel.TextSize = 11
-StepLabel.BackgroundTransparency = 1
-StepLabel.Parent = MainFrame
-
-KeyBox.Size = UDim2.new(0, 260, 0, 45)
-KeyBox.Position = UDim2.new(0.5, -130, 0, 130)
-KeyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-KeyBox.PlaceholderText = "Paste Key Here..."
-KeyBox.Text = ""
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.TextSize = 25
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.Parent = MainFrame
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 8)
-
--- Set button backgrounds to dark gray
-GetKeyBtn.Size = UDim2.new(0, 120, 0, 40)
-GetKeyBtn.Position = UDim2.new(0, 30, 0, 195)
-GetKeyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-GetKeyBtn.Text = "GET KEY"
-GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-GetKeyBtn.TextSize = 22
-GetKeyBtn.Font = Enum.Font.GothamBold
-GetKeyBtn.Parent = MainFrame
-Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 8)
-
-VerifyBtn.Size = UDim2.new(0, 120, 0, 40)
-VerifyBtn.Position = UDim2.new(0, 170, 0, 195)
-VerifyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-VerifyBtn.Text = "VERIFY"
-VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-VerifyBtn.TextSize = 22
-VerifyBtn.Font = Enum.Font.GothamBold
-VerifyBtn.Parent = MainFrame
-Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 8)
-
-MainFrame.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0, 320, 0, 260)}):Play()
-
--- Rainbow RGB Loop Configuration (Handles Main Frame Stroke, Title, and Both Buttons)
-local isOverridingVerifyColor = false
-task.spawn(function()
-	while ScreenGui and ScreenGui.Parent do
-		local hue = (tick() % 5) / 5 
-		local rainbowColor = Color3.fromHSV(hue, 1, 1)
-		
-		UIStroke.Color = rainbowColor
-		Title.TextColor3 = rainbowColor
-		GetKeyBtn.TextColor3 = rainbowColor
-		
-		if not isOverridingVerifyColor then
-			VerifyBtn.TextColor3 = rainbowColor
-		end
-		
-		RunService.RenderStepped:Wait()
-	end
-end)
-
--- Button Hover & Press Animation Builder
-local function AnimateBtn(btn)
-	local originalColor = btn.BackgroundColor3
-	btn.MouseEnter:Connect(function()
-		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = originalColor:Lerp(Color3.new(1,1,1), 0.1)}):Play()
-	end)
-	btn.MouseLeave:Connect(function()
-		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = originalColor}):Play()
-	end)
-	btn.MouseButton1Down:Connect(function()
-		btn:TweenSize(UDim2.new(0, 115, 0, 35), "Out", "Quad", 0.1, true)
-	end)
-	btn.MouseButton1Up:Connect(function()
-		btn:TweenSize(UDim2.new(0, 120, 0, 40), "Out", "Quad", 0.1, true)
-	end)
-end
-
-AnimateBtn(GetKeyBtn)
-AnimateBtn(VerifyBtn)
-
-CloseBtn.MouseButton1Click:Connect(function()
-	TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-	task.wait(0.3)
-	ScreenGui:Destroy()
-end)
-
-GetKeyBtn.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard(KeyLink)
-	end
-	GetKeyBtn.Text = "Copied!"
-	task.wait(1.5)
-	GetKeyBtn.Text = "GET KEY"
-end)
-
-VerifyBtn.MouseButton1Click:Connect(function()
-	if KeyBox.Text == ActualKey then
-		isOverridingVerifyColor = true
-		VerifyBtn.Text = "LOADING..."
-		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		VerifyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
-		
-		TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-		task.wait(0.5)
-		ScreenGui:Destroy()
-		
-		loadstring(game:HttpGet(ScriptURL))()
-	else
-		isOverridingVerifyColor = true
-		VerifyBtn.Text = "INVALID KEY"
-		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		VerifyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-		task.wait(1.5)
-		
-		-- Reset layout states cleanly back to dark gray RGB mode
-		VerifyBtn.Text = "VERIFY"
-		VerifyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-		isOverridingVerifyColor = false
-	end
-end)
-
-
-
-
-
-
-
-
-
-
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local Lighting = game:GetService("Lighting")
-
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "KeySystem"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- Dynamic Parent Assignment
-local success, err = pcall(function()
-    screenGui.Parent = CoreGui
-end)
-if not success then
-    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-end
-
--- ==========================================
--- FIXED: BACK BLUR EFFECT
--- ==========================================
-local blurContainer = Instance.new("Frame")
-blurContainer.Size = UDim2.new(1, 0, 1, 0)
-blurContainer.BackgroundTransparency = 1
-blurContainer.Parent = screenGui
-
--- Added fallback: CoreGui scripts usually cannot inject into Lighting safely
-local blurEffect = Lighting:FindFirstChild("KyoSystemBlur") or Instance.new("BlurEffect")
-blurEffect.Name = "KyoSystemBlur"
-blurEffect.Size = 15 
-blurEffect.Parent = Lighting
-
--- Create Modern Background Frame (INCREASED SIZE & ADJUSTED POSITION)
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 440, 0, 310) -- Increased width to 440 and height to 310
-frame.Position = UDim2.new(0.5, -220, 0.5, -155) -- Centered perfectly for the new size
-frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12) 
-frame.BackgroundTransparency = 0.15 
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true 
-
-local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 14) -- Slightly increased radius to match larger size
-frameCorner.Parent = frame
-
--- Neon Border Accent
-local borderStroke = Instance.new("UIStroke")
-borderStroke.Color = Color3.fromRGB(0, 255, 150) 
-borderStroke.Thickness = 1.5
-borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-borderStroke.Parent = frame
-
--- Create Title Label
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 60) -- Increased title area height
-title.BackgroundTransparency = 1
-title.Text = "KEY SYSTEM" -- Restored sample text to fix formatting layout
-title.TextColor3 = Color3.fromRGB(0, 255, 150)
-title.TextSize = 18 -- Slightly larger text size
-title.Font = Enum.Font.RobotoMono
-title.Parent = frame
-
--- Create TextBox (Input Field)
-local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0.85, 0, 0, 44) -- Increased thickness/height of input field
-textBox.Position = UDim2.new(0.075, 0, 0.22, 0) -- Adjusted position layout
-textBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.PlaceholderText = "Enter Access Key..."
-textBox.PlaceholderColor3 = Color3.fromRGB(90, 90, 90)
-textBox.TextSize = 15 -- Increased font size
-textBox.Text = ""
-textBox.Font = Enum.Font.RobotoMono
-textBox.ClearTextOnFocus = false
-textBox.Parent = frame
-
-local textCorner = Instance.new("UICorner")
-textCorner.CornerRadius = UDim.new(0, 8)
-textCorner.Parent = textBox
-
-local textStroke = Instance.new("UIStroke")
-textStroke.Color = Color3.fromRGB(35, 35, 35)
-textStroke.Thickness = 1
-textStroke.Parent = textBox
-
--- Create Submit Button
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0.85, 0, 0, 46) -- Increased height
-button.Position = UDim2.new(0.075, 0, 0.48, 0) -- Scaled layout spacing
-button.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-button.TextColor3 = Color3.fromRGB(10, 10, 10)
-button.Text = "Verify"
-button.TextSize = 15 -- Scaled font size up
-button.Font = Enum.Font.RobotoMono
-button.AutoButtonColor = false 
-button.Parent = frame
-
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 8)
-buttonCorner.Parent = button
-
--- Create Get Key Button
-local getKeyButton = Instance.new("TextButton")
-getKeyButton.Size = UDim2.new(0.85, 0, 0, 46) -- Increased height
-getKeyButton.Position = UDim2.new(0.075, 0, 0.73, 0) -- Scaled layout spacing
-getKeyButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-getKeyButton.TextColor3 = Color3.fromRGB(0, 255, 150)
-getKeyButton.Text = "GET KEY"
-getKeyButton.TextSize = 15 -- Scaled font size up
-getKeyButton.Font = Enum.Font.RobotoMono
-getKeyButton.AutoButtonColor = false 
-getKeyButton.Parent = frame
-
-local getKeyCorner = Instance.new("UICorner")
-getKeyCorner.CornerRadius = UDim.new(0, 8)
-getKeyCorner.Parent = getKeyButton
-
-local getKeyStroke = Instance.new("UIStroke")
-getKeyStroke.Color = Color3.fromRGB(0, 255, 150)
-getKeyStroke.Thickness = 1
-getKeyStroke.Parent = getKeyButton
-
--- Put main frame inside blur container to layer properly
-frame.Parent = blurContainer
-
--- ==========================================
--- INTERACTIVE TWEEN ANIMATIONS
--- ==========================================
-local function tween(object, info, properties)
-    return TweenService:Create(object, info, properties)
-end
-
-local infoFast = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local infoSlow = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
--- TextBox Focus Tweens
-textBox.Focused:Connect(function()
-    tween(textStroke, infoFast, {Color = Color3.fromRGB(0, 255, 150)}):Play()
-end)
-
-textBox.FocusLost:Connect(function()
-    tween(textStroke, infoFast, {Color = Color3.fromRGB(35, 35, 35)}):Play()
-end)
-
--- Submit Button Hover Tweens
-button.MouseEnter:Connect(function()
-    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(50, 255, 180)}):Play()
-end)
-
-button.MouseLeave:Connect(function()
-    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 150)}):Play()
-end)
-
--- Get Key Button Hover Tweens
-getKeyButton.MouseEnter:Connect(function()
-    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-end)
-
-getKeyButton.MouseLeave:Connect(function()
-    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(22, 22, 22)}):Play()
-end)
-
--- ==========================================
--- BUTTON FUNCTIONALITIES
--- ==========================================
-local KEY_LINK = "https://linkvertise.com" 
-local CORRECT_KEY = "PrivateScript1"
-local isProcessing = false
-
--- Get Key Functionality
-getKeyButton.MouseButton1Click:Connect(function()
-    local oldText = getKeyButton.Text
-    
-    if setclipboard then
-        setclipboard(KEY_LINK)
-        getKeyButton.Text = "COPIED TO CLIPBOARD!"
-    else
-        getKeyButton.Text = "NOT SUPPORTED BY EXECUTOR"
-    end
-    
-    task.wait(2)
-    getKeyButton.Text = oldText
-end)
-
--- Key System Logic & Broken Loadstring Fix
-button.MouseButton1Click:Connect(function()
-    if isProcessing then return end
-    isProcessing = true
-    
-    local input = textBox.Text
-    
-    if input == CORRECT_KEY then
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 200, 100), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-        tween(borderStroke, infoFast, {Color = Color3.fromRGB(0, 255, 0)}):Play()
-        button.Text = "ACCESS GRANTED"
-        
-        task.wait(1)
-        button.Text = "ACCESS GRANTED"
-        task.wait(0.8)
-        
-        tween(frame, infoSlow, {BackgroundTransparency = 1}):Play()
-        tween(title, infoSlow, {TextTransparency = 1}):Play()
-        tween(textBox, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-        tween(textStroke, infoSlow, {Transparency = 1}):Play()
-        tween(button, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-        tween(getKeyButton, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-        tween(getKeyStroke, infoSlow, {Transparency = 1}):Play()
-        tween(borderStroke, infoSlow, {Transparency = 1}):Play()
-        
-        local blurFade = tween(blurEffect, infoSlow, {Size = 0})
-        blurFade:Play()
-        
-        blurFade.Completed:Connect(function()
-            blurEffect:Destroy()
-            screenGui:Destroy()
-            
-            -- FIXED: Completed the broken syntax from your original snippet safely
-            local execSuccess, execErr = pcall(function()
-                local rawScript = game:HttpGet("https://raw.githubusercontent.com/IVRzHxZ/Kyo-Private-Muscle-Beach-Arena/refs/heads/main/Kyo-Private")
-                local func, parseErr = loadstring(rawScript)
-                if func then
-                    func()
-                else
-                    error("Parsing Error: " .. tostring(parseErr))
-                end
-            end)
-            if not execSuccess then
-                warn("Execution failed: " .. tostring(execErr))
-            end
-        end)
-    else
-        -- Incorrect key visual indicator
-        button.Text = "INVALID KEY"
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 50, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-        task.wait(1.5)
-        button.Text = "Verify"
-        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 150), TextColor3 = Color3.fromRGB(10, 10, 10)}):Play()
-        isProcessing = false
-    end
-end)
-
-
-
-
-
-
-
-
-
-new version Key!!!!!!!!!!!!!!
-
-
-
-
-
-
--- Configuration Settings
-local CORRECT_KEY = "K"
-local GET_KEY_LINK = "https://linkvertise.com"
-local DISCORD_LINK = "https://discord.gg"
-
--- 🖼️ ILAGAY ANG MGA ASSET ID DITO (Mga numero lang mula sa Roblox Creator Dashboard o URL)
-local LOGO_ID = "131431625957379"            -- ID ng iyong logo icon sa itaas
-local BACKGROUND_ID = ""      -- ID para sa likod ng buong screen (gawing plain/dark)
-local MAINFRAME_BG_ID = ""   -- 🫧 ID NG BUBBLES MO DITO PARA PUMASOK SA MAINFRAME!
-
--- Pag-format sa tamang Roblox Asset URL string
-local function parseAsset(id)
-    local num = string.match(tostring(id), "%d+")
-    return num and ("rbxassetid://" .. num) or ""
-end
-
-local LOGO_IMAGE_ID = parseAsset(LOGO_ID)
-local BACKGROUND_IMAGE_ID = parseAsset(BACKGROUND_ID)
-local MAINFRAME_IMAGE_ID = parseAsset(MAINFRAME_BG_ID)
-
--- Services
-local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
-
--- 🛡️ ScreenGui Container Injection
-local sgui = Instance.new("ScreenGui")
-sgui.Name = "XenoKeySystemContainer"
-sgui.IgnoreGuiInset = true
-sgui.ResetOnSpawn = false
-
-pcall(function() sgui.Parent = CoreGui end)
-if not sgui.Parent then
-    sgui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-end
-
--- 🌌 1. Full Screen Canvas (Plain o Dark Grid Background)
-local bgFrame = Instance.new("ImageLabel")
-bgFrame.Size = UDim2.new(1, 0, 1, 0)
-bgFrame.Image = BACKGROUND_IMAGE_ID
-bgFrame.ScaleType = Enum.ScaleType.Crop
-bgFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 18)
-bgFrame.BorderSizePixel = 0
-bgFrame.Parent = sgui
-
--- ⬜ 2. Main Container Box (Ang mismong madilim na kahon sa gitna)
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 360, 0, 440)
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 21, 28)
-mainFrame.BorderSizePixel = 0
-mainFrame.Parent = sgui
-
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 14)
-mainCorner.Parent = mainFrame
-
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(45, 49, 66)
-mainStroke.Thickness = 1.2
-mainStroke.Parent = mainFrame
-
--- 🫧 3. Bubble Effect Layer (FIXED OVERLAY MECHANIC)
-local bubbleOverlay = Instance.new("ImageLabel")
-bubbleOverlay.Size = UDim2.new(1, 0, 1, 0)
-bubbleOverlay.BackgroundTransparency = 1 -- Siguradong silip ang background panel sa ilalim
-bubbleOverlay.Image = MAINFRAME_IMAGE_ID
-bubbleOverlay.ScaleType = Enum.ScaleType.Crop
-bubbleOverlay.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Pinapanatili ang orihinal na kulay ng bubble
-bubbleOverlay.BorderSizePixel = 0
-bubbleOverlay.ZIndex = 2 -- Naka-angat sa ibabaw ng base frame pero nasa ilalim ng text/buttons
-bubbleOverlay.Parent = mainFrame
-
-local bubbleCorner = Instance.new("UICorner")
-bubbleCorner.CornerRadius = UDim.new(0, 14)
-bubbleCorner.Parent = bubbleOverlay
-
--- 🖼️ 4. Logo Badge Area
-local logoBox = Instance.new("Frame")
-logoBox.Size = UDim2.new(0, 54, 0, 54)
-logoBox.Position = UDim2.new(0.5, -27, 0, 24)
-logoBox.BackgroundColor3 = Color3.fromRGB(28, 30, 41)
-logoBox.BorderSizePixel = 0
-logoBox.ZIndex = 3
-logoBox.Parent = mainFrame
-
-local logoCorner = Instance.new("UICorner")
-logoCorner.CornerRadius = UDim.new(0, 10)
-logoCorner.Parent = logoBox
-
-local logoStroke = Instance.new("UIStroke")
-logoStroke.Color = Color3.fromRGB(60, 65, 85)
-logoStroke.Thickness = 1
-logoStroke.Parent = logoBox
-
-local logoImage = Instance.new("ImageLabel")
-logoImage.Size = UDim2.new(0.8, 0, 0.8, 0)
-logoImage.Position = UDim2.new(0.1, 0, 0.1, 0)
-logoImage.BackgroundTransparency = 1
-logoImage.Image = LOGO_IMAGE_ID
-logoImage.ZIndex = 4
-logoImage.Parent = logoBox
-
--- 🔤 Title Headings
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 24)
-title.Position = UDim2.new(0, 0, 0, 96)
-title.BackgroundTransparency = 1
-title.Text = "Access Key Required"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 20
-title.Font = Enum.Font.GothamBold
-title.ZIndex = 3
-title.Parent = mainFrame
-
-local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, 0, 0, 20)
-subtitle.Position = UDim2.new(0, 0, 0, 122)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "Enter your access key to continue"
-subtitle.TextColor3 = Color3.fromRGB(170, 175, 195)
-subtitle.TextSize = 12
-subtitle.Font = Enum.Font.Gotham
-subtitle.ZIndex = 3
-subtitle.Parent = mainFrame
-
--- ✍️ Input Area (TextBox)
-local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0, 312, 0, 48)
-textBox.Position = UDim2.new(0.5, -156, 0, 164)
-textBox.BackgroundColor3 = Color3.fromRGB(25, 27, 38)
-textBox.BorderSizePixel = 0
-textBox.Text = ""
-textBox.PlaceholderText = "Enter key here..."
-textBox.PlaceholderColor3 = Color3.fromRGB(90, 95, 115)
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.TextSize = 14
-textBox.Font = Enum.Font.Gotham
-textBox.ClearTextOnFocus = false
-textBox.ZIndex = 3
-textBox.Parent = mainFrame
-
-local textCorner = Instance.new("UICorner")
-textCorner.CornerRadius = UDim.new(0, 8)
-textCorner.Parent = textBox
-
-local textStroke = Instance.new("UIStroke")
-textStroke.Color = Color3.fromRGB(45, 50, 70)
-textStroke.Parent = textBox
-
--- 🔘 Primary Verification Button
-local verifyBtn = Instance.new("TextButton")
-verifyBtn.Size = UDim2.new(0, 312, 0, 48)
-verifyBtn.Position = UDim2.new(0.5, -156, 0, 226)
-verifyBtn.BackgroundColor3 = Color3.fromRGB(45, 48, 64)
-verifyBtn.BorderSizePixel = 0
-verifyBtn.Text = "Verify Access Key"
-verifyBtn.TextColor3 = Color3.fromRGB(230, 235, 245)
-verifyBtn.TextSize = 14
-verifyBtn.Font = Enum.Font.GothamMedium
-verifyBtn.ZIndex = 3
-verifyBtn.Parent = mainFrame
-
-local verifyCorner = Instance.new("UICorner")
-verifyCorner.CornerRadius = UDim.new(0, 8)
-verifyCorner.Parent = verifyBtn
-
--- 🖼️ Secondary Multi-Button Footer
-local footer = Instance.new("Frame")
-footer.Size = UDim2.new(0, 312, 0, 44)
-footer.Position = UDim2.new(0.5, -156, 0, 286)
-footer.BackgroundTransparency = 1
-footer.ZIndex = 3
-footer.Parent = mainFrame
-
-local getKeyBtn = Instance.new("TextButton")
-getKeyBtn.Size = UDim2.new(0, 150, 1, 0)
-getKeyBtn.Position = UDim2.new(0, 0, 0, 0)
-getKeyBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
-getKeyBtn.BorderSizePixel = 0
-getKeyBtn.Text = "Get Key"
-getKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-getKeyBtn.TextSize = 14
-getKeyBtn.Font = Enum.Font.GothamMedium
-getKeyBtn.ZIndex = 4
-getKeyBtn.Parent = footer
-
-local getCorner = Instance.new("UICorner")
-getCorner.CornerRadius = UDim.new(0, 8)
-getCorner.Parent = getKeyBtn
-
-local discordBtn = Instance.new("TextButton")
-discordBtn.Size = UDim2.new(0, 150, 1, 0)
-discordBtn.Position = UDim2.new(1, -150, 0, 0)
-discordBtn.BackgroundColor3 = Color3.fromRGB(79, 70, 229)
-discordBtn.BorderSizePixel = 0
-discordBtn.Text = "Discord"
-discordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-discordBtn.TextSize = 14
-discordBtn.Font = Enum.Font.GothamMedium
-discordBtn.ZIndex = 4
-discordBtn.Parent = footer
-
-local discordCorner = Instance.new("UICorner")
-discordCorner.CornerRadius = UDim.new(0, 8)
-discordCorner.Parent = discordBtn
-
--- 🔤 Alert Status Label
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0, 24)
-statusLabel.Position = UDim2.new(0, 0, 1, -40)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = ""
-statusLabel.TextSize = 13
-statusLabel.Font = Enum.Font.GothamMedium
-statusLabel.ZIndex = 3
-statusLabel.Parent = mainFrame
-
----------------------------------------------------------
--- ⚙️ UX INTERACTION LOGIC
----------------------------------------------------------
-local function applyHover(btn, norm, hov)
-    btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = hov}):Play() end)
-    btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = norm}):Play() end)
-end
-applyHover(verifyBtn, Color3.fromRGB(45, 48, 64), Color3.fromRGB(58, 62, 82))
-applyHover(getKeyBtn, Color3.fromRGB(16, 185, 129), Color3.fromRGB(22, 210, 145))
-applyHover(discordBtn, Color3.fromRGB(79, 70, 229), Color3.fromRGB(95, 85, 250))
-
-local function showStatus(txt, col)
-    statusLabel.Text = txt
-    statusLabel.TextColor3 = col
-end
-
-verifyBtn.MouseButton1Click:Connect(function()
-    local cleanInput = string.gsub(textBox.Text, "%s+", "")
-    if cleanInput == CORRECT_KEY then
-        showStatus("Access Granted! Executing runtime script...", Color3.fromRGB(16, 185, 129))
-        task.wait(1)
-        
-        local close = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
-        close:Play()
-        close.Completed:Connect(function()
-            sgui:Destroy()
-            print("Target Script loaded successfully via Xeno context.")
-        end)
-    else
-        showStatus("Invalid key code. Please check again.", Color3.fromRGB(239, 68, 68))
-        textBox.Text = ""
-    end
-end)
-
-getKeyBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(GET_KEY_LINK)
-        showStatus("Key system gateway link copied to clipboard!", Color3.fromRGB(59, 130, 246))
-    else
-        textBox.Text = GET_KEY_LINK
-        showStatus("Clipboard failed. Copy URL text from input box.", Color3.fromRGB(234, 179, 8))
-    end
-end)
-
-discordBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(DISCORD_LINK)
-        showStatus("Discord server link copied to clipboard!", Color3.fromRGB(79, 70, 229))
-    else
-        textBox.Text = DISCORD_LINK
-        showStatus("Clipboard failed. Copy Discord link from input box.", Color3.fromRGB(234, 179, 8))
-    end
-end)
-
-
-
-
-
-
-
-
-
 
 Pro key system
 
@@ -1350,6 +257,658 @@ button.MouseButton1Click:Connect(function()
         tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0), TextColor3 = Color3.fromRGB(20, 0, 0)}):Play()
         
         -- Payagan ulit pumindot ang user para mag-retry
+        isProcessing = false
+    end
+end)
+
+
+
+
+
+
+
+
+whitelist players only
+
+
+
+
+
+
+
+
+-- ==========================================
+-- WHITELIST & CONFIGURATION SYSTEM
+-- ==========================================
+local WHITELISTED_USERS = {
+    "ben446783",
+    "carxy126",
+    "elrawa3454"
+}
+
+local function isWhitelisted(player)
+    for _, idOrName in ipairs(WHITELISTED_USERS) do
+        if type(idOrName) == "number" and player.UserId == idOrName then
+            return true
+        elseif type(idOrName) == "string" and player.Name:lower() == idOrName:lower() then
+            return true
+        end
+    end
+    return false
+end
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+
+-- ==========================================
+-- KEY SYSTEM UI (Lalabas sa LAHAT ng player)
+-- ==========================================
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+-- DELTA FIX: Target PlayerGui directly to prevent CoreGui parent crashes on mobile
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RedKeySystem"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+-- ==========================================
+-- BACK BLUR EFFECT
+-- ==========================================
+local blurContainer = Instance.new("Frame")
+blurContainer.Size = UDim2.new(1, 0, 1, 0)
+blurContainer.BackgroundTransparency = 1
+blurContainer.Parent = screenGui
+
+local blurEffect = Lighting:FindFirstChild("KyoSystemBlur") or Instance.new("BlurEffect")
+blurEffect.Name = "KyoSystemBlur"
+blurEffect.Size = 15 
+blurEffect.Parent = Lighting
+
+-- Create Pure Crimson Background Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 440, 0, 310) 
+frame.Position = UDim2.new(0.5, -220, 0.5, -155) 
+frame.BackgroundColor3 = Color3.fromRGB(20, 5, 5) -- Pure deep red dark theme
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.Active = true
+
+-- Mobile-friendly drag implementation (Replaces deprecated .Draggable property)
+local dragToggle, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = false
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragToggle = false end
+        end)
+    end
+end)
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragToggle then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end
+end)
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14) 
+frameCorner.Parent = frame
+
+-- FULL RED: Intense Neon Border Accent
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(255, 0, 0) 
+borderStroke.Thickness = 2
+borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderStroke.Parent = frame
+
+-- FULL RED: Title Label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60) 
+title.BackgroundTransparency = 1
+title.Text = "KEY SYSTEM" 
+title.TextColor3 = Color3.fromRGB(255, 0, 0)
+title.TextSize = 18 
+title.Font = Enum.Font.RobotoMono
+title.Parent = frame
+
+-- Create TextBox (Input Field)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0.85, 0, 0, 44) 
+textBox.Position = UDim2.new(0.075, 0, 0.22, 0) 
+textBox.BackgroundColor3 = Color3.fromRGB(35, 10, 10) -- Red-tinted background input
+textBox.TextColor3 = Color3.fromRGB(255, 200, 200)
+textBox.PlaceholderText = "Enter Access Key..."
+textBox.PlaceholderColor3 = Color3.fromRGB(150, 60, 60)
+textBox.TextSize = 15 
+textBox.Text = ""
+textBox.Font = Enum.Font.RobotoMono
+textBox.ClearTextOnFocus = false
+textBox.Parent = frame
+
+local textCorner = Instance.new("UICorner")
+textCorner.CornerRadius = UDim.new(0, 8)
+textCorner.Parent = textBox
+
+local textStroke = Instance.new("UIStroke")
+textStroke.Color = Color3.fromRGB(120, 20, 20)
+textStroke.Thickness = 1
+textStroke.Parent = textBox
+
+-- FULL RED: Submit Button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.85, 0, 0, 46) 
+button.Position = UDim2.new(0.075, 0, 0.48, 0) 
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.TextColor3 = Color3.fromRGB(20, 0, 0) -- Dark red contrast text
+button.Text = "Verify"
+button.TextSize = 18
+button.Font = Enum.Font.RobotoMono
+button.AutoButtonColor = false 
+button.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = button
+
+-- FULL RED: Get Key Button Layout
+local getKeyButton = Instance.new("TextButton")
+getKeyButton.Size = UDim2.new(0.85, 0, 0, 46) 
+getKeyButton.Position = UDim2.new(0.075, 0, 0.73, 0) 
+getKeyButton.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+getKeyButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+getKeyButton.Text = "GET KEY"
+getKeyButton.TextSize = 15 
+getKeyButton.Font = Enum.Font.RobotoMono
+getKeyButton.AutoButtonColor = false 
+getKeyButton.Parent = frame
+
+local getKeyCorner = Instance.new("UICorner")
+getKeyCorner.CornerRadius = UDim.new(0, 8)
+getKeyCorner.Parent = getKeyButton
+
+local getKeyStroke = Instance.new("UIStroke")
+getKeyStroke.Color = Color3.fromRGB(255, 0, 0)
+getKeyStroke.Thickness = 1
+getKeyStroke.Parent = getKeyButton
+
+-- Wrap layout components into container 
+frame.Parent = blurContainer
+
+-- ==========================================
+-- INTERACTIVE RED TWEEN ANIMATIONS
+-- ==========================================
+local function tween(object, info, properties)
+    return TweenService:Create(object, info, properties)
+end
+
+local infoFast = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local infoSlow = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- Global Processing State Variable
+local isProcessing = false
+
+-- TextBox Active Interaction States
+textBox.Focused:Connect(function()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0), Thickness = 1.5}):Play()
+end)
+
+textBox.FocusLost:Connect(function()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(120, 20, 20), Thickness = 1}):Play()
+end)
+
+-- Main Verification Action Hover States
+button.MouseEnter:Connect(function()
+    if isProcessing then return end
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+end)
+
+button.MouseLeave:Connect(function()
+    if isProcessing then return end
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play()
+end)
+
+-- Secondary Action Hover States
+getKeyButton.MouseEnter:Connect(function()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(70, 15, 15)}):Play()
+end)
+
+getKeyButton.MouseLeave:Connect(function()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(40, 10, 10)}):Play()
+end)
+
+-- ==========================================
+-- DELTA INTERACTION PROCESSING
+-- ==========================================
+local KEY_LINK = "https://linkvertise.com" 
+local CORRECT_KEY = "PrivateScript1"
+
+-- DELTA COMPATIBLE: Clipboard Functionality
+getKeyButton.MouseButton1Click:Connect(function()
+    local oldText = getKeyButton.Text
+    local clipFunc = setclipboard or toclipboard or (Clipboard and Clipboard.set)
+    
+    if clipFunc then
+        clipFunc(KEY_LINK)
+        getKeyButton.Text = "COPIED TO CLIPBOARD!"
+    else
+        getKeyButton.Text = "FAILED TO AUTO-COPY KEY"
+    end
+    
+    task.wait(2)
+    getKeyButton.Text = oldText
+end)
+
+-- Crimson Logic Processing System
+button.MouseButton1Click:Connect(function()
+    if isProcessing then return end
+    isProcessing = true
+    
+    local input = textBox.Text
+    
+    if input == CORRECT_KEY then
+        if isWhitelisted(localPlayer) then
+            button.Text = "ACCESS GRANTED"
+            
+            -- GREEN BUTTON + WHITE TEXT
+            tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 120), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            tween(borderStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0)}):Play() 
+            
+            task.wait(1.2)
+            
+            -- Clean structural fade-out transition sequence
+            tween(frame, infoSlow, {BackgroundTransparency = 1}):Play()
+            tween(title, infoSlow, {TextTransparency = 1}):Play()
+            tween(textBox, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+            tween(textStroke, infoSlow, {Transparency = 1}):Play()
+            tween(button, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+            tween(getKeyButton, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+            tween(getKeyStroke, infoSlow, {Transparency = 1}):Play()
+            tween(borderStroke, infoSlow, {Transparency = 1}):Play()
+            
+            task.wait(0.4)
+            blurEffect:Destroy()
+            screenGui:Destroy()
+            
+            -- Loadstring kapag whitelisted at tama ang key
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/IVRzHxZ/Kyo-Private-Muscle-Beach-Arena/refs/heads/main/Kyo-Private"))()
+        else
+            button.Text = "NOT WHITELISTED!"
+            tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(150, 0, 0), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            
+            task.wait(1.5)
+            button.Text = "Verify"
+            tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0), TextColor3 = Color3.fromRGB(20, 0, 0)}):Play()
+            isProcessing = false
+        end
+    else
+        button.Text = "INVALID KEY"
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(150, 0, 0), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        
+        task.wait(1.5)
+        
+        button.Text = "Verify"
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0), TextColor3 = Color3.fromRGB(20, 0, 0)}):Play()
+        
+        isProcessing = false
+    end
+end)
+
+
+
+
+
+
+
+
+whitelisted player on in muscle beach arena script
+
+
+
+
+
+
+
+
+
+-- ==========================================
+-- WHITELIST & CONFIGURATION SYSTEM
+-- ==========================================
+local WHITELISTED_USERS = {
+    "ben446783",
+    "carxy126",
+    "elrawa3454"
+}
+
+local function isWhitelisted(player)
+    for _, idOrName in ipairs(WHITELISTED_USERS) do
+        if type(idOrName) == "number" and player.UserId == idOrName then
+            return true
+        elseif type(idOrName) == "string" and player.Name:lower() == idOrName:lower() then
+            return true
+        end
+    end
+    return false
+end
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+
+-- ==========================================
+-- KUNG HINDI WHITELISTED: Auto-Rebirth & Auto-Sell AGAD (Walang Key System na lalabas)
+-- ==========================================
+if not isWhitelisted(localPlayer) then
+    print("[Anti-Exploit] Unwhitelisted player detected. Executing auto-rebirth and auto-sell...")
+    
+    -- 1. Auto-Rebirth
+    pcall(function()
+        game:GetService("ReplicatedStorage").remotes.rebirthRequest:FireServer()
+    end)
+    
+    -- 2. Background Auto-Sell System
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local remotesFolder = ReplicatedStorage:FindFirstChild("remotes") or ReplicatedStorage:FindFirstChild("Remotes")
+    local sellRemote = nil
+    
+    if remotesFolder then
+        sellRemote = remotesFolder:FindFirstChild("sellPet") 
+            or remotesFolder:FindFirstChild("SellPet") 
+            or remotesFolder:FindFirstChild("sellRequest")
+            or remotesFolder:FindFirstChild("SellRequest")
+    end
+    
+    if sellRemote then
+        local function startBackgroundAutoSell(petName)
+            task.spawn(function()
+                while true do
+                    local p = Players.LocalPlayer
+                    local petsFolder = p:FindFirstChild("PetsFolder") or p:FindFirstChild("Pets")
+                    
+                    if petsFolder and petsFolder:FindFirstChild(petName) then
+                        pcall(function()
+                            sellRemote:FireServer(petsFolder[petName])
+                        end)
+                    end
+                    
+                    task.wait(1)
+                end
+            end)
+        end
+        
+        local petsToAutoSell = {
+            "Cat", "Dog", "Rabbit", "Hamster", "Shark",
+            "Wolf", "Fox", "MuscleMan", "Spike", "Bear",
+            "Snow Wolf", "Forest Deer", "Fire Pup", "Shadow Wolf", "Thunder Bear",
+            "Spirit Wolf", "Storm Tiger", "Lunar Dragon", "Crystal Dragon",
+            "Pelican", "Divine Dragon", "Neon Divine Dragon", "Space Dragon",
+            "Red Alien", "Fire Alien", "Vortex", "Astrax"
+        }
+        
+        for _, pet in ipairs(petsToAutoSell) do
+            startBackgroundAutoSell(pet)
+        end
+    end
+    
+    -- I-terminate na ang script para hindi na lumabas ang UI sa mga hindi whitelisted
+    return
+end
+
+-- ==========================================
+-- KEY SYSTEM UI (Para lamang sa mga WHITELISTED)
+-- ==========================================
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+-- DELTA FIX: Target PlayerGui directly to prevent CoreGui parent crashes on mobile
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RedKeySystem"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+-- ==========================================
+-- BACK BLUR EFFECT
+-- ==========================================
+local blurContainer = Instance.new("Frame")
+blurContainer.Size = UDim2.new(1, 0, 1, 0)
+blurContainer.BackgroundTransparency = 1
+blurContainer.Parent = screenGui
+
+local blurEffect = Lighting:FindFirstChild("KyoSystemBlur") or Instance.new("BlurEffect")
+blurEffect.Name = "KyoSystemBlur"
+blurEffect.Size = 15 
+blurEffect.Parent = Lighting
+
+-- Create Pure Crimson Background Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 440, 0, 310) 
+frame.Position = UDim2.new(0.5, -220, 0.5, -155) 
+frame.BackgroundColor3 = Color3.fromRGB(20, 5, 5) -- Pure deep red dark theme
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.Active = true
+
+-- Mobile-friendly drag implementation (Replaces deprecated .Draggable property)
+local dragToggle, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = false
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragToggle = false end
+        end)
+    end
+end)
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragToggle then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end
+end)
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14) 
+frameCorner.Parent = frame
+
+-- FULL RED: Intense Neon Border Accent
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(255, 0, 0) 
+borderStroke.Thickness = 2
+borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderStroke.Parent = frame
+
+-- FULL RED: Title Label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60) 
+title.BackgroundTransparency = 1
+title.Text = "KEY SYSTEM" 
+title.TextColor3 = Color3.fromRGB(255, 0, 0)
+title.TextSize = 18 
+title.Font = Enum.Font.RobotoMono
+title.Parent = frame
+
+-- Create TextBox (Input Field)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0.85, 0, 0, 44) 
+textBox.Position = UDim2.new(0.075, 0, 0.22, 0) 
+textBox.BackgroundColor3 = Color3.fromRGB(35, 10, 10) -- Red-tinted background input
+textBox.TextColor3 = Color3.fromRGB(255, 200, 200)
+textBox.PlaceholderText = "Enter Access Key..."
+textBox.PlaceholderColor3 = Color3.fromRGB(150, 60, 60)
+textBox.TextSize = 15 
+textBox.Text = ""
+textBox.Font = Enum.Font.RobotoMono
+textBox.ClearTextOnFocus = false
+textBox.Parent = frame
+
+local textCorner = Instance.new("UICorner")
+textCorner.CornerRadius = UDim.new(0, 8)
+textCorner.Parent = textBox
+
+local textStroke = Instance.new("UIStroke")
+textStroke.Color = Color3.fromRGB(120, 20, 20)
+textStroke.Thickness = 1
+textStroke.Parent = textBox
+
+-- FULL RED: Submit Button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.85, 0, 0, 46) 
+button.Position = UDim2.new(0.075, 0, 0.48, 0) 
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.TextColor3 = Color3.fromRGB(20, 0, 0) -- Dark red contrast text
+button.Text = "Verify"
+button.TextSize = 18
+button.Font = Enum.Font.RobotoMono
+button.AutoButtonColor = false 
+button.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = button
+
+-- FULL RED: Get Key Button Layout
+local getKeyButton = Instance.new("TextButton")
+getKeyButton.Size = UDim2.new(0.85, 0, 0, 46) 
+getKeyButton.Position = UDim2.new(0.075, 0, 0.73, 0) 
+getKeyButton.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+getKeyButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+getKeyButton.Text = "GET KEY"
+getKeyButton.TextSize = 15 
+getKeyButton.Font = Enum.Font.RobotoMono
+getKeyButton.AutoButtonColor = false 
+getKeyButton.Parent = frame
+
+local getKeyCorner = Instance.new("UICorner")
+getKeyCorner.CornerRadius = UDim.new(0, 8)
+getKeyCorner.Parent = getKeyButton
+
+local getKeyStroke = Instance.new("UIStroke")
+getKeyStroke.Color = Color3.fromRGB(255, 0, 0)
+getKeyStroke.Thickness = 1
+getKeyStroke.Parent = getKeyButton
+
+-- Wrap layout components into container 
+frame.Parent = blurContainer
+
+-- ==========================================
+-- INTERACTIVE RED TWEEN ANIMATIONS
+-- ==========================================
+local function tween(object, info, properties)
+    return TweenService:Create(object, info, properties)
+end
+
+local infoFast = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local infoSlow = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- Global Processing State Variable
+local isProcessing = false
+
+-- TextBox Active Interaction States
+textBox.Focused:Connect(function()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0), Thickness = 1.5}):Play()
+end)
+
+textBox.FocusLost:Connect(function()
+    tween(textStroke, infoFast, {Color = Color3.fromRGB(120, 20, 20), Thickness = 1}):Play()
+end)
+
+-- Main Verification Action Hover States
+button.MouseEnter:Connect(function()
+    if isProcessing then return end
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+end)
+
+button.MouseLeave:Connect(function()
+    if isProcessing then return end
+    tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play()
+end)
+
+-- Secondary Action Hover States
+getKeyButton.MouseEnter:Connect(function()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(70, 15, 15)}):Play()
+end)
+
+getKeyButton.MouseLeave:Connect(function()
+    tween(getKeyButton, infoFast, {BackgroundColor3 = Color3.fromRGB(40, 10, 10)}):Play()
+end)
+
+-- ==========================================
+-- DELTA INTERACTION PROCESSING
+-- ==========================================
+local KEY_LINK = "https://linkvertise.com" 
+local CORRECT_KEY = "PrivateScript1"
+
+-- DELTA COMPATIBLE: Clipboard Functionality
+getKeyButton.MouseButton1Click:Connect(function()
+    local oldText = getKeyButton.Text
+    local clipFunc = setclipboard or toclipboard or (Clipboard and Clipboard.set)
+    
+    if clipFunc then
+        clipFunc(KEY_LINK)
+        getKeyButton.Text = "COPIED TO CLIPBOARD!"
+    else
+        getKeyButton.Text = "FAILED TO AUTO-COPY KEY"
+    end
+    
+    task.wait(2)
+    getKeyButton.Text = oldText
+end)
+
+-- Crimson Logic Processing System
+button.MouseButton1Click:Connect(function()
+    if isProcessing then return end
+    isProcessing = true
+    
+    local input = textBox.Text
+    
+    if input == CORRECT_KEY then
+        button.Text = "ACCESS GRANTED"
+        
+        -- GREEN BUTTON + WHITE TEXT
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(0, 255, 120), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        tween(borderStroke, infoFast, {Color = Color3.fromRGB(255, 0, 0)}):Play() 
+        
+        task.wait(1.2)
+        
+        -- Clean structural fade-out transition sequence
+        tween(frame, infoSlow, {BackgroundTransparency = 1}):Play()
+        tween(title, infoSlow, {TextTransparency = 1}):Play()
+        tween(textBox, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        tween(textStroke, infoSlow, {Transparency = 1}):Play()
+        tween(button, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        tween(getKeyButton, infoSlow, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        tween(getKeyStroke, infoSlow, {Transparency = 1}):Play()
+        tween(borderStroke, infoSlow, {Transparency = 1}):Play()
+        
+        task.wait(0.4)
+        blurEffect:Destroy()
+        screenGui:Destroy()
+        
+        -- Loadstring kapag whitelisted at tama ang key
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/IVRzHxZ/Kyo-Private-Muscle-Beach-Arena/refs/heads/main/Kyo-Private"))()
+    else
+        button.Text = "INVALID KEY"
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(150, 0, 0), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        
+        task.wait(1.5)
+        
+        button.Text = "Verify"
+        tween(button, infoFast, {BackgroundColor3 = Color3.fromRGB(255, 0, 0), TextColor3 = Color3.fromRGB(20, 0, 0)}):Play()
+        
         isProcessing = false
     end
 end)
